@@ -31,6 +31,7 @@ THE SOFTWARE.
 #include <vector>
 
 using namespace CMSat;
+
 using std::vector;
 
 
@@ -1372,6 +1373,35 @@ TEST(xor_recovery, DISABLED_find_xor_renumber)
     EXPECT_EQ(xors[0].first, str_to_vars("2, 3, 4, 5, 6, 7,8, 9, 10"));
 }
 
+TEST(solver_api, new_var_increments_and_stays_okay)
+{
+    SATSolver s;
+    s.set_verbosity(0);
+    ASSERT_EQ(s.nVars(), 0u);
+
+    s.new_var();
+    EXPECT_EQ(s.nVars(), 1u);
+    EXPECT_TRUE(s.okay());
+
+    s.new_var();
+    EXPECT_EQ(s.nVars(), 2u);
+
+    s.new_var();
+    EXPECT_EQ(s.nVars(), 3u);
+    EXPECT_TRUE(s.okay());
+
+    vector<Lit> clause;
+    clause.push_back(Lit(0, false));
+    s.add_clause(clause);
+
+    lbool res = s.solve();
+    ASSERT_EQ(res, l_True);
+
+    const vector<lbool>& model = s.get_model();
+    ASSERT_EQ(model.size(), 3u);
+    EXPECT_EQ(model[0], l_True);
+    EXPECT_EQ(s.nVars(), 3u);
+}
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
